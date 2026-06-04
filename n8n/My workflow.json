@@ -1,0 +1,275 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "etl-error",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1ac5d2a0-b41b-4fb0-aaf1-6d29e7f30c44",
+      "name": "Webhook",
+      "webhookId": "0a3833c6-7edc-4b2f-8ce2-9ae376b3afc5"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Senior DataOps Engineer.\n\nAnalyze the incident and return ONLY valid JSON.\n\nReturn ONLY:\n\n{\n  \"issue\": \"\",\n  \"category\": \"\",\n  \"severity\": \"<Low | Medium | High>\",\n  \"recommended_fix\": \"\",\n  \"time\": \"<current timestamp>\n\"\n}\n\nIncident:\n\nPipeline: {{ $json.body.pipeline_name }}\n\nJob: {{ $json.body.job_name }}\n\nJob Type:{{ $json.body.job_type }}\n\nError:{{ $json.body.error }}\n\nStacktrace : {{ $json.body.stacktrace }}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "90b83df1-5ba3-443c-96d9-ae420ca59c19",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "ZHfVQOajRlzCb3bA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "10A0nqFYKfksQ-PTVSjeMXCvzQ1clkvMBEcRKjPLmbhs",
+          "mode": "list",
+          "cachedResultName": "AI_etl_errors_history",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10A0nqFYKfksQ-PTVSjeMXCvzQ1clkvMBEcRKjPLmbhs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10A0nqFYKfksQ-PTVSjeMXCvzQ1clkvMBEcRKjPLmbhs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.time }}",
+            "Pipeline": "={{ $('Webhook').item.json.body.pipeline_name }}",
+            "Job": "={{ $('Webhook').item.json.body.job_name }}",
+            "Job Type": "={{ $('Webhook').item.json.body.job_type }}",
+            "Category": "={{ $json.category }}",
+            "Severity": "={{ $json.severity }}",
+            "Issue": "={{ $json.issue }}",
+            "Fix": "={{ $json.recommended_fix }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pipeline",
+              "displayName": "Pipeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job",
+              "displayName": "Job",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Type",
+              "displayName": "Job Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Severity",
+              "displayName": "Severity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Issue",
+              "displayName": "Issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fix",
+              "displayName": "Fix",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        672,
+        0
+      ],
+      "id": "93c7687a-67e1-47f6-92bf-7a430d716e30",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "ofeEDVKy1KO0mY1n",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n// for (const item of $input.all()) {\n//   item.json.myNewField = 1;\n// }\n\n// return $input.all();\n\nconst text = $input.first().json.content.parts[0].text;\n\nreturn [\n  {\n    json: JSON.parse(text)\n  }\n];;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        16
+      ],
+      "id": "ca5be2c4-a3a6-47ff-ba3c-115051f26a3f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "1039890318",
+        "text": "={{\n`🚨 ETL Incident\n\nPipeline: ${$json.Pipeline}\nJob: ${$json.Job}\nCategory: ${$json.Category}\nSeverity: ${$json.Severity}\n\nIssue:\n${$json.Issue}\n\nRecommended Fix:\n${$json.Fix}`\n}}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "1cae9b2b-f244-4e40-a1db-1c9240ced618",
+      "name": "Send a text message",
+      "webhookId": "822a073e-65e6-4a17-ab07-7e1ff65d3933",
+      "credentials": {
+        "telegramApi": {
+          "id": "xQBKhrYBXlNBD0gt",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "12e49f93-4165-4e41-b028-37017e72812f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f730b5c5e9d8d3bc38ff0cb89da8695081feb02782a423226d899f94cb304373"
+  },
+  "id": "56Q3ubO1rXZtz4GV",
+  "tags": []
+}
